@@ -81,7 +81,7 @@ core::arch::global_asm!(
         .type _vector_table, @function
         
         .option push
-        .balign 0x4 // TODO check if this is the correct alignment
+        .balign 0x100 // RISC-V requires 4, but implementations may be stricter
         .option norelax
         .option norvc
         
