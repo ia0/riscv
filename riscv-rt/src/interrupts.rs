@@ -75,14 +75,20 @@ pub unsafe extern "C" fn _dispatch_core_interrupt(code: usize) {
     any(target_arch = "riscv32", target_arch = "riscv64"),
     feature = "v-trap"
 ))]
-core::arch::global_asm!(
+cfg_global_asm!(
     r#" .section .trap, "ax"
         .weak _vector_table
         .type _vector_table, @function
-        
-        .option push
-        .balign 0x100 // RISC-V requires 4, but implementations may be stricter
-        .option norelax
+        .option push"#,
+    #[cfg(not(feature = "mtvec-align-16"))]
+    ".balign 0x4",
+    #[cfg(all(feature = "mtvec-align-16", not(feature = "mtvec-align-64")))]
+    ".balign 0x10",
+    #[cfg(all(feature = "mtvec-align-64", not(feature = "mtvec-align-256")))]
+    ".balign 0x40",
+    #[cfg(feature = "mtvec-align-256")]
+    ".balign 0x100",
+    r#" .option norelax
         .option norvc
         
         _vector_table:
@@ -99,5 +105,5 @@ core::arch::global_asm!(
             j _start_DefaultHandler_trap      // Interrupt 10 is reserved
             j _start_MachineExternal_trap
         
-        .option pop"#
+        .option pop"#,
 );

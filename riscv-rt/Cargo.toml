@@ -37,3 +37,7 @@ v-trap = ["riscv-rt-macros/v-trap"]
 u-boot = ["riscv-rt-macros/u-boot", "single-hart"]
 no-interrupts = []
 no-exceptions = []
+# Alignment requirement of the vector table in bytes (default is 4).
+mtvec-align-16 = []
+mtvec-align-64 = ["mtvec-align-16"]
+mtvec-align-256 = ["mtvec-align-64"]

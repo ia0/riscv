@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Ensure the vector table is 256-byte aligned.
+- Add `mtvec-align-{16,64,256}` features to control the vector table alignment.
 - Ensure the `.heap` section is 4-byte aligned.
 - Limit rustc cfg flags to `riscvi`, `riscvm`, `riscvf`, and `riscvd`.
 - Temporary use of `RISCV_RT_LLVM_ARCH_PATCH` environment variable to include the
