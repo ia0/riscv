@@ -532,26 +532,6 @@
 #![no_std]
 #![deny(missing_docs)]
 
-/// Parse cfg attributes inside a global_asm call.
-#[allow(unused_macros)]
-macro_rules! cfg_global_asm {
-    {@inner, [$($x:tt)*], } => {
-        core::arch::global_asm!{$($x)*}
-    };
-    (@inner, [$($x:tt)*], #[cfg($meta:meta)] $asm:literal, $($rest:tt)*) => {
-        #[cfg($meta)]
-        cfg_global_asm!{@inner, [$($x)* $asm,], $($rest)*}
-        #[cfg(not($meta))]
-        cfg_global_asm!{@inner, [$($x)*], $($rest)*}
-    };
-    {@inner, [$($x:tt)*], $asm:literal, $($rest:tt)*} => {
-        cfg_global_asm!{@inner, [$($x)* $asm,], $($rest)*}
-    };
-    {$($asms:tt)*} => {
-        cfg_global_asm!{@inner, [], $($asms)*}
-    };
-}
-
 #[cfg(any(target_arch = "riscv32", target_arch = "riscv64"))]
 mod asm;
 

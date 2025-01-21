@@ -565,6 +565,61 @@ _continue_interrupt_trap:
     instructions.parse().unwrap()
 }
 
+#[cfg(feature = "v-trap")]
+#[proc_macro]
+/// Generates global '_vector_table' function in assembly.
+///
+/// The alignment constraint (in bytes) is read from the `RISCV_RT_MTVEC_ALIGN` environment variable
+/// and defaults to 4.
+pub fn vector_table(_input: TokenStream) -> TokenStream {
+    let mut align = match std::env::var("RISCV_RT_MTVEC_ALIGN") {
+        Ok(x) => x.parse::<u32>().ok(),
+        Err(std::env::VarError::NotPresent) => Some(4),
+        Err(std::env::VarError::NotUnicode(_)) => None,
+    };
+    if let Some(value) = align {
+        if !value.is_power_of_two() || value < 4 {
+            align = None;
+        }
+    }
+    let Some(align) = align else {
+        return quote!(compile_error!(
+            "RISCV_RT_MTVEC_ALIGN is not a power of 2 (minimum 4)"
+        ))
+        .into();
+    };
+    let instructions = format!(
+        r##"
+core::arch::global_asm!(
+    r#" .section .trap, "ax"
+        .weak _vector_table
+        .type _vector_table, @function
+
+        .option push
+        .balign {align}
+        .option norelax
+        .option norvc
+
+        _vector_table:
+            j _start_trap                     // Interrupt 0 is used for exceptions
+            j _start_SupervisorSoft_trap
+            j _start_DefaultHandler_trap      // Interrupt 2 is reserved
+            j _start_MachineSoft_trap
+            j _start_DefaultHandler_trap      // Interrupt 4 is reserved
+            j _start_SupervisorTimer_trap
+            j _start_DefaultHandler_trap      // Interrupt 6 is reserved
+            j _start_MachineTimer_trap
+            j _start_DefaultHandler_trap      // Interrupt 8 is reserved
+            j _start_SupervisorExternal_trap
+            j _start_DefaultHandler_trap      // Interrupt 10 is reserved
+            j _start_MachineExternal_trap
+
+        .option pop"#
+);"##
+    );
+    instructions.parse().unwrap()
+}
+
 #[derive(Clone, Copy, Debug)]
 enum RiscvPacItem {
     Exception,

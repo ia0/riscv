@@ -70,41 +70,10 @@ pub unsafe extern "C" fn _dispatch_core_interrupt(code: usize) {
     }
 }
 
-// In vectored mode, we also must provide a vector table
+// In vectored mode, we also must provide a vector table. This is done with a proc-macro to control
+// the alignment constraint from the `RISCV_RT_MTVEC_ALIGN` environment variable.
 #[cfg(all(
     any(target_arch = "riscv32", target_arch = "riscv64"),
     feature = "v-trap"
 ))]
-cfg_global_asm!(
-    r#" .section .trap, "ax"
-        .weak _vector_table
-        .type _vector_table, @function
-        
-        .option push"#,
-    #[cfg(not(feature = "mtvec-align-16"))]
-    ".balign 0x4",
-    #[cfg(all(feature = "mtvec-align-16", not(feature = "mtvec-align-64")))]
-    ".balign 0x10",
-    #[cfg(all(feature = "mtvec-align-64", not(feature = "mtvec-align-256")))]
-    ".balign 0x40",
-    #[cfg(feature = "mtvec-align-256")]
-    ".balign 0x100",
-    r#" .option norelax
-        .option norvc
-        
-        _vector_table:
-            j _start_trap                     // Interrupt 0 is used for exceptions
-            j _start_SupervisorSoft_trap
-            j _start_DefaultHandler_trap      // Interrupt 2 is reserved
-            j _start_MachineSoft_trap
-            j _start_DefaultHandler_trap      // Interrupt 4 is reserved
-            j _start_SupervisorTimer_trap
-            j _start_DefaultHandler_trap      // Interrupt 6 is reserved
-            j _start_MachineTimer_trap
-            j _start_DefaultHandler_trap      // Interrupt 8 is reserved
-            j _start_SupervisorExternal_trap
-            j _start_DefaultHandler_trap      // Interrupt 10 is reserved
-            j _start_MachineExternal_trap
-        
-        .option pop"#,
-);
+riscv_rt_macros::vector_table!();
