@@ -79,6 +79,7 @@ cfg_global_asm!(
     r#" .section .trap, "ax"
         .weak _vector_table
         .type _vector_table, @function
+        
         .option push"#,
     #[cfg(not(feature = "mtvec-align-16"))]
     ".balign 0x4",
