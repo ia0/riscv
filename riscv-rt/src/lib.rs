@@ -533,6 +533,7 @@
 #![deny(missing_docs)]
 
 /// Parse cfg attributes inside a global_asm call.
+#[allow(unused_macros)]
 macro_rules! cfg_global_asm {
     {@inner, [$($x:tt)*], } => {
         core::arch::global_asm!{$($x)*}
